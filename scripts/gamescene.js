@@ -8,6 +8,10 @@ class GameScene extends Phaser.Scene {
         this.timerEvent = null;
     }
 
+    init(data) {
+        this.resetRequested = data.reset || false;
+    }
+
     preload() {
         // Load assets
         this.load.image('background', 'assets/png/space background.png');
@@ -65,6 +69,10 @@ class GameScene extends Phaser.Scene {
         }
 
         this.startTimer();
+
+        if (this.resetRequested) {
+            this.resetGame();
+        }
     }
 
     update() {
@@ -92,13 +100,12 @@ class GameScene extends Phaser.Scene {
     }
 
     startTimer() {
-        this.startTime = 0;
+        this.startTime = this.time.now;
         this.survivalTime = 0;
         this.gameOverFlag = false;
         if (this.timerEvent) {
-            this.timerEvent.remove(false); // Remove any existing timer event
+            this.timerEvent.remove(false); 
         }
-        this.startTime = this.time.now;
         this.timerEvent = this.time.addEvent({
             delay: 1000,
             callback: this.updateSurvivalTime,
@@ -153,7 +160,7 @@ class GameScene extends Phaser.Scene {
             asteroid.disableBody(true, true);
         });
 
-        this.bullets.clear(true, true); // Clear all bullets when the game is over
+        this.bullets.clear(true, true);
 
         this.physics.pause();
         this.player.setTint(0xff0000);
@@ -164,15 +171,16 @@ class GameScene extends Phaser.Scene {
 
         this.gameOverText = this.add.image(this.game.config.width / 2, this.game.config.height / 2 - 100, 'gameOverText').setOrigin(0.5).setScale(0.35);
 
+        // Retry Button
         this.retryButton = this.add.image(this.game.config.width / 2, this.game.config.height / 2, 'retryButton').setOrigin(0.5).setInteractive().setScale(1);
         this.retryButton.on('pointerdown', () => {
             this.sound.play('buttonClick', { volume: 0.5 });
-            this.resetGame();
-            this.scene.restart();
+            this.scene.restart({ reset: true });
         });
         this.retryButton.on('pointerover', () => this.retryButton.setTint(0xaaaaaa));
         this.retryButton.on('pointerout', () => this.retryButton.clearTint());
 
+        // Menu Button
         this.menuButton = this.add.image(this.game.config.width / 2, this.game.config.height / 2 + 100, 'menuButton').setOrigin(0.5).setInteractive().setScale(1);
         this.menuButton.on('pointerdown', () => {
             this.sound.play('buttonClick', { volume: 0.5 });
@@ -188,9 +196,11 @@ class GameScene extends Phaser.Scene {
         this.physics.resume();
         this.player.clearTint();
         this.asteroids.clear(true, true);
-        this.bullets.clear(true, true); // Clear bullets when the game resets
+        this.bullets.clear(true, true);
         this.asteroidsDestroyed = 0;
-        this.startTimer(); // Reset and start the timer when the game resets
+        this.survivalTime = 0;
+        this.gameOverFlag = false;
+        this.startTimer();
         this.updateScoreText();
     }
 
@@ -211,43 +221,13 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    pause() {
-        this.time.removeAllEvents();
-        if (this.timerEvent) {
-            this.timerEvent.paused = true;
-        }
-        super.pause();
-    }
-
-    resume() {
-        if (this.timerEvent) {
-            this.timerEvent.paused = false;
-        }
-        this.startTime = this.time.now - this.survivalTime;
-        super.resume();
-    }
-
-    sleep() {
-        this.time.removeAllEvents();
-        if (this.timerEvent) {
-            this.timerEvent.paused = true;
-        }
-        super.sleep();
-    }
-
-    wake() {
-        if (this.timerEvent) {
-            this.timerEvent.paused = false;
-        }
-        this.startTime = this.time.now - this.survivalTime;
-        super.wake();
-    }
-
     shutdown() {
         if (this.timerEvent) {
             this.timerEvent.remove(false);
         }
         this.time.removeAllEvents();
+        this.survivalTime = 0; 
+        this.startTime = 0; 
         super.shutdown();
     }
 

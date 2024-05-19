@@ -4,30 +4,27 @@ class OpenScene extends Phaser.Scene {
     }
 
     preload() {
-        // Load images
+        // Load assets
         this.load.image('title', 'assets/png/text_title.png');
         this.load.image('startButton', 'assets/png/button-blue01_start.png');
         this.load.image('quitButton', 'assets/png/button-blue01_quit.png');
         this.load.image('background', 'assets/png/space background.png');
-
-        // Load audio
         this.load.audio('buttonClick', 'assets/mp3/button click sfx.mp3');
     }
 
     create() {
-        // Background
         this.background = this.add.tileSprite(0, 0, this.game.config.width, this.game.config.height, 'background').setOrigin(0, 0);
 
-        // Title
         this.title = this.add.image(this.game.config.width / 2, this.game.config.height / 2 - 100, 'title').setOrigin(0.5);
-        this.title.setScale(0.35); // Adjust the size as needed
+        this.title.setScale(0.35);
 
         // Start Button
         this.startButton = this.add.image(this.game.config.width / 2, this.game.config.height / 2, 'startButton').setOrigin(0.5).setInteractive();
         this.startButton.setScale(1);
         this.startButton.on('pointerdown', () => {
             this.sound.play('buttonClick', { volume: 0.5 });
-            this.scene.start('GameScene');
+            this.scene.stop('GameScene');
+            this.scene.start('GameScene', { reset: true });
         });
         this.startButton.on('pointerover', () => this.startButton.setTint(0xaaaaaa));
         this.startButton.on('pointerout', () => this.startButton.clearTint());
